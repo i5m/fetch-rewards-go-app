@@ -39,19 +39,71 @@ func setPoints(points int) string {
 	return id
 }
 
+// One point for every alphanumeric character in the retailer name.
+func calcAlphaNum(retailer string) int {
+	total := 0
+	for _, char := range retailer {
+		if unicode.IsLetter(char) || unicode.IsDigit(char) {
+			total++
+		}
+	}
+	return total
+}
+
+// 6 points if the day in the purchase date is odd.
+func addDatePoints(d string) (points int, err error) {
+	purchaseDate, err := time.Parse("2006-01-02", d)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	} else if purchaseDate.Day() % 2 != 0 {
+		return 6, nil
+	} else {
+		return 0, nil
+	}
+	
+}
+
+// 10 points if the time of purchase is after 2:00pm and before 4:00pm.
+func addTimePoints(t string) (points int, err error) {
+	purchaseTime, err := time.Parse("15:04", t)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	} else if purchaseTime.Hour() >= 14 && purchaseTime.Hour() <= 16 {
+		return 10, nil
+	} else {
+		return 0, nil
+	}
+}
 // calculatePoints calculates and returns the points based on the provided receipt information.
 func calculatePoints(receipt Receipt) int {
 
-	points := 0
-
-	// One point for every alphanumeric character in the retailer name.
-	for _, char := range receipt.Retailer {
-		if unicode.IsLetter(char) || unicode.IsDigit(char) {
-			points++
-		}
+	if receipt.Retailer == "" || receipt.PurchaseDate == "" || receipt.PurchaseTime == "" || receipt.Total == "" {
+		return -1
 	}
 
+	points := 0
+
+	points += calcAlphaNum(receipt.Retailer)
+
+	dpt, err := addDatePoints(receipt.PurchaseDate)
+	if err != nil {
+		return -1
+	}
+	points += dpt
+
+	tpt, err := addTimePoints(receipt.PurchaseTime)
+	if err != nil {
+		return -1
+	}
+	points += tpt
+
+
 	total := parseFloat(receipt.Total)
+	if total == -1 {
+		return -1
+	}
 	_, dec := math.Modf(total)
 
 	// 50 points if the total is a round dollar amount with no cents.
@@ -68,30 +120,23 @@ func calculatePoints(receipt Receipt) int {
 	points += (5 * int(len(receipt.Items) / 2))
 
 	for _, item := range receipt.Items {
+
+		if item.ShortDescription == "" || item.Price == "" {
+			return -1
+		}
+
+		price := parseFloat(item.Price)
+		if price == -1 {
+			return -1
+		}
+
 		// trimmed length of the item description
 		trimmedLen := len(strings.TrimSpace(item.ShortDescription))
 		// is a multiple of 3
 		if trimmedLen % 3 == 0 {
 			// multiply the price by 0.2 and round up to the nearest integer
-			price := parseFloat(item.Price)
 			points += int(math.Ceil(price * 0.2))
 		}
-	}
-
-	// 6 points if the day in the purchase date is odd.
-	purchaseDate, err := time.Parse("2006-01-02", receipt.PurchaseDate)
-	if err != nil {
-		fmt.Println(err)
-	} else if purchaseDate.Day() % 2 != 0 {
-		points += 6
-	}
-
-	// 10 points if the time of purchase is after 2:00pm and before 4:00pm.
-	purchaseTime, err := time.Parse("15:04", receipt.PurchaseTime)
-	if err != nil {
-		fmt.Println(err)
-	} else if purchaseTime.Hour() >= 14 && purchaseTime.Hour() <= 16 {
-		points += 10
 	}
 
 	return points
@@ -100,7 +145,11 @@ func calculatePoints(receipt Receipt) int {
 
 // parseFloat converts a string to a floating-point number.
 func parseFloat(s string) float64 {
-	val, _ := strconv.ParseFloat(s, 64)
+	val, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
 	return val
 }
 
@@ -117,6 +166,12 @@ func receiptProcess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	points := calculatePoints(receipt)
+
+	if points == -1 {
+		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
+		return
+	}
+
 	id := setPoints(points)
 	response := IdResponse{Id: id}
 

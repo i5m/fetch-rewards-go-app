@@ -20,7 +20,7 @@ func getPoints(id string) int {
 	if exists {
 		return points
 	}
-	return 0
+	return -1
 }
 
 // receiptPoints is an HTTP handler function that responds to a request for retrieving points.
@@ -33,6 +33,12 @@ func receiptPoints(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieving points for the provided ID using the getPoints function.
 	points := getPoints(id)
+
+	if points == -1 {
+		http.Error(w, "No receipt found for that id", http.StatusNotFound)
+		return	
+	}
+
 	// Creating a PointsResponse with the retrieved points.
 	response := PointsResponse{Points: points}
 
