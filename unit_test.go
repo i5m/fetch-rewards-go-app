@@ -145,7 +145,7 @@ func TestFirstTime(t *testing.T) {
 	want := 0
 
 	if pt != want {
-		t.Errorf("Failed second test on TestFirstTime :( Expected points: %d, got: %d", want, pt)
+		t.Errorf("Failed second test on TestFirstTime. Expected points: %d, got: %d", want, pt)
 	}
 
 }
