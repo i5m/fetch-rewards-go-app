@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Receipt represents the structure of a receipt.
+// Receipt represents the structure of a receipt
 type Receipt struct {
 	Retailer     string   `json:"retailer"`
 	PurchaseDate string   `json:"purchaseDate"`
