@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-// PointsResponse represents the JSON response structure.
+// PointsResponse represents the JSON response structure
 type PointsResponse struct {
 	Points int `json:"points"`
 }
