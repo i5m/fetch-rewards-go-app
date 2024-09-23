@@ -18,5 +18,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /reward-app
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
 EXPOSE 8080
 
-# Run
+# Run the app
 CMD ["/reward-app"]
