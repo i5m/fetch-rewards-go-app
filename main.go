@@ -11,7 +11,7 @@ var GlobalDBStore = make(map[string]int)
 
 func main() {
 
-	// Using mux to efficiently handle routing and dynamic URLs
+	// Using mux to efficiently handle routing and dynamic URLs.
 	r := mux.NewRouter()
 
 	// To handle new receipts -> stores points in db
